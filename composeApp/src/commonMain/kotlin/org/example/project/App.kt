@@ -1,21 +1,19 @@
 package org.example.project
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import org.example.project.domain.repository.TradeRepository
+import org.example.project.ui.TradeListScreen
 
+// ✅ We added 'tradeRepository' as a parameter here
 @Composable
-fun App() {
+fun App(tradeRepository: TradeRepository) {
     MaterialTheme {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Trading App is Running!")
-        }
+        // Pass the repository to the screen we created in Step 1
+        TradeListScreen(tradeRepository)
     }
 }
+
+
+
+
