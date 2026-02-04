@@ -1,14 +1,14 @@
 package org.example.project
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import org.example.project.domain.repository.TradeRepository
 import org.example.project.ui.AddTradeScreen
 import org.example.project.ui.TradeListScreen
+import org.example.project.ui.theme.AppTheme
 
 @Composable
 fun App(tradeRepository: TradeRepository) {
-    MaterialTheme {
+    AppTheme {
         // Simple Navigation State: "list" or "add"
         var currentScreen by remember { mutableStateOf("list") }
 
