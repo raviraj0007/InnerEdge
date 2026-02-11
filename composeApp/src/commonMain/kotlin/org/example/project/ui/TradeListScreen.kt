@@ -57,6 +57,7 @@ import org.example.project.domain.model.Trade
 import org.example.project.domain.model.TradeDirection
 import org.example.project.domain.model.TradeStatus
 import org.example.project.domain.repository.TradeRepository
+import kotlin.math.abs
 
 private enum class TradeFilter(val label: String) {
     ALL("All"),
@@ -74,11 +75,12 @@ fun TradeListScreen(
 ) {
     var trades by remember { mutableStateOf(emptyList<Trade>()) }
     var selectedFilter by remember { mutableStateOf(TradeFilter.ALL) }
+    var isFabExpanded by remember { mutableStateOf(false) }
     var fabExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        repository.getAllTrades().collect { list ->
-            trades = list
+        repository.getAllTrades().collect { tradeList ->
+            trades = tradeList
         }
     }
 
@@ -206,6 +208,7 @@ private fun OverviewCard(trades: List<Trade>) {
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = formatCurrency(totalPnl),
                         style = MaterialTheme.typography.titleMedium,
