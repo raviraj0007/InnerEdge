@@ -35,6 +35,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,6 +76,7 @@ fun TradeListScreen(
     var trades by remember { mutableStateOf(emptyList<Trade>()) }
     var selectedFilter by remember { mutableStateOf(TradeFilter.ALL) }
     var isFabExpanded by remember { mutableStateOf(false) }
+    var fabExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         repository.getAllTrades().collect { tradeList ->
@@ -95,47 +97,43 @@ fun TradeListScreen(
     }
 
     Scaffold(
+        topBar = { CenterAlignedTopAppBar(title = { Text("Trade Journal") }) },
         containerColor = Color.White,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(text = "Trade Journal") }
-            )
-        },
         floatingActionButton = {
             ExpandableFabMenu(
-                expanded = isFabExpanded,
-                onMainFabClick = { isFabExpanded = !isFabExpanded },
+                expanded = fabExpanded,
+                onMainFabClick = {
+                    fabExpanded = !fabExpanded
+                    if (!fabExpanded) onAddClick()
+                },
                 onAddLiveTrade = {
-                    isFabExpanded = false
+                    fabExpanded = false
                     onAddClick()
                 },
                 onAddBacktestTrade = {
-                    isFabExpanded = false
+                    fabExpanded = false
                     onAddClick()
                 },
                 onAddPsychologyEntry = {
-                    isFabExpanded = false
+                    fabExpanded = false
                     onAddClick()
                 }
             )
         }
-    ) { innerPadding ->
+    ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(padding),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                OverviewMetricsCard(trades = trades)
+                OverviewCard(trades = trades)
             }
 
             item {
-                TradeFilterRow(
-                    selectedFilter = selectedFilter,
-                    onFilterSelected = { selectedFilter = it }
-                )
+                FilterRow(selectedFilter = selectedFilter, onFilterSelected = { selectedFilter = it })
             }
 
             if (filteredTrades.isEmpty()) {
@@ -152,10 +150,15 @@ fun TradeListScreen(
 }
 
 @Composable
-private fun OverviewMetricsCard(trades: List<Trade>) {
+private fun OverviewCard(trades: List<Trade>) {
     val closedTrades = trades.filter { it.status == TradeStatus.CLOSED && it.pnl != null }
-    val winTrades = closedTrades.count { (it.pnl ?: 0.0) > 0.0 }
-    val winRate = if (closedTrades.isEmpty()) 0.0 else (winTrades.toDouble() / closedTrades.size) * 100.0
+    val winningTrades = closedTrades.count { (it.pnl ?: 0.0) > 0.0 }
+    val winRate = if (closedTrades.isNotEmpty()) {
+        (winningTrades.toDouble() / closedTrades.size.toDouble()) * 100
+    } else {
+        0.0
+    }
+
     val totalPnl = trades.sumOf { it.pnl ?: 0.0 }
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
     val todayPnl = trades.filter { it.date == today }.sumOf { it.pnl ?: 0.0 }
@@ -170,7 +173,7 @@ private fun OverviewMetricsCard(trades: List<Trade>) {
             modifier = Modifier
                 .background(
                     brush = Brush.linearGradient(
-                        colors = listOf(Color(0xFFEAF2FF), Color(0xFFF1EDFF))
+                        colors = listOf(Color(0xFFEAF2FF), Color(0xFFF2EEFF))
                     )
                 )
                 .padding(16.dp)
@@ -182,34 +185,35 @@ private fun OverviewMetricsCard(trades: List<Trade>) {
             )
             Spacer(modifier = Modifier.height(12.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
-                MetricItem(
+                MetricColumn(
                     modifier = Modifier.weight(1f),
                     value = trades.size.toString(),
                     label = "Total Trades"
                 )
-                ThinDivider()
-                MetricItem(
+                VerticalDivider()
+                MetricColumn(
                     modifier = Modifier.weight(1f),
                     value = "${winRate.format(0)}%",
                     label = "Win Rate",
-                    valueColor = if (winRate >= 50.0) ProfitGreen else MaterialTheme.colorScheme.onSurface
+                    valueColor = if (winRate >= 50) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface
                 )
-                ThinDivider()
+                VerticalDivider()
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 10.dp)
+                        .padding(horizontal = 12.dp)
                 ) {
                     Text(
                         text = "Total P&L",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = formatCurrency(totalPnl),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = pnlColor(totalPnl)
+                        color = pnlColor(totalPnl),
+                        fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -224,15 +228,13 @@ private fun OverviewMetricsCard(trades: List<Trade>) {
 }
 
 @Composable
-private fun MetricItem(
+private fun MetricColumn(
     modifier: Modifier,
     value: String,
     label: String,
     valueColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
-    Column(
-        modifier = modifier.padding(horizontal = 10.dp)
-    ) {
+    Column(modifier = modifier.padding(horizontal = 12.dp)) {
         Text(
             text = value,
             style = MaterialTheme.typography.headlineSmall,
@@ -242,30 +244,30 @@ private fun MetricItem(
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
 
 @Composable
-private fun ThinDivider() {
+private fun VerticalDivider() {
     Box(
         modifier = Modifier
             .width(1.dp)
             .height(52.dp)
-            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
     )
 }
 
 @Composable
-private fun TradeFilterRow(
+private fun FilterRow(
     selectedFilter: TradeFilter,
     onFilterSelected: (TradeFilter) -> Unit
 ) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(TradeFilter.entries) { filter ->
             FilterChip(
-                selected = selectedFilter == filter,
+                selected = filter == selectedFilter,
                 onClick = { onFilterSelected(filter) },
                 label = { Text(filter.label) }
             )
@@ -280,7 +282,7 @@ private fun TradeStoryCard(trade: Trade) {
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f),
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(16.dp)
             ),
         shape = RoundedCornerShape(16.dp),
@@ -298,56 +300,54 @@ private fun TradeStoryCard(trade: Trade) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = trade.instrument,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = trade.marketType.name,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
-                    )
-                }
+                Text(
+                    text = trade.instrument,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
                 AssistChip(
                     onClick = {},
-                    label = {
-                        Text(text = if (trade.direction == TradeDirection.BUY) "BUY" else "SELL")
-                    }
+                    label = { Text(if (trade.direction == TradeDirection.BUY) "BUY" else "SELL") }
                 )
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                PriceStat(label = "Entry", value = trade.entryPrice)
-                PriceStat(label = "SL", value = trade.stopLoss)
-                PriceStat(label = "TP", value = trade.target)
+                PriceInfo(text = "Entry", value = trade.entryPrice)
+                PriceInfo(text = "SL", value = trade.stopLoss)
+                PriceInfo(text = "TP", value = trade.target)
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         text = "P&L",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = trade.pnl?.let { formatCurrency(it) } ?: "Open Position",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = pnlColor(trade.pnl ?: 0.0)
+                        color = pnlColor(trade.pnl ?: 0.0),
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
-                Text(
-                    text = "Risk: ${trade.riskPercent?.let { "${it.format(2)}%" } ?: "—"}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Risk",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = trade.riskPercent?.let { "${it.format(2)}%" } ?: "—",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
 
             Text(
@@ -355,24 +355,25 @@ private fun TradeStoryCard(trade: Trade) {
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Text(
-                text = "Emotion: ${trade.emotion.toEmotionLabel()}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
+            trade.emotion?.let {
+                Text(
+                    text = "Emotion: $it",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
 
             if (trade.mistakes.isNotEmpty()) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(trade.mistakes) { mistake ->
-                        Card(
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F5F8)),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        Surface(
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
                                 text = mistake,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                style = MaterialTheme.typography.labelMedium
+                                style = MaterialTheme.typography.labelLarge
                             )
                         }
                     }
@@ -383,9 +384,9 @@ private fun TradeStoryCard(trade: Trade) {
 }
 
 @Composable
-private fun PriceStat(label: String, value: Double?) {
+private fun PriceInfo(text: String, value: Double?) {
     Text(
-        text = "$label: ${value?.format(2) ?: "—"}",
+        text = "$text: ${value?.format(2) ?: "—"}",
         style = MaterialTheme.typography.bodyMedium
     )
 }
@@ -402,20 +403,13 @@ private fun EmptyStateCard(onAddClick: () -> Unit) {
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Text("No trades for this filter", style = MaterialTheme.typography.titleMedium)
             Text(
-                text = "No trades found",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = "Try another filter or add a new trade.",
+                "Add a trade to start building your complete trading story.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            ExtendedFloatingActionButton(
-                onClick = onAddClick,
-                text = { Text("Add Trade") }
-            )
+            ExtendedFloatingActionButton(onClick = onAddClick, text = { Text("Add Trade") })
         }
     }
 }
@@ -439,76 +433,40 @@ private fun ExpandableFabMenu(
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FabActionButton(label = "📈 Add Live Trade", onClick = onAddLiveTrade)
-                FabActionButton(label = "🧪 Add Backtest Trade", onClick = onAddBacktestTrade)
-                FabActionButton(label = "🧠 Add Psychology Entry", onClick = onAddPsychologyEntry)
+            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                MiniFabAction(label = "📈 Add Live Trade", onClick = onAddLiveTrade)
+                MiniFabAction(label = "🧪 Add Backtest Trade", onClick = onAddBacktestTrade)
+                MiniFabAction(label = "🧠 Add Psychology Entry", onClick = onAddPsychologyEntry)
             }
         }
 
-        FloatingActionButton(
-            onClick = onMainFabClick,
-            shape = CircleShape,
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        ) {
-            Text(
-                text = "+",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.rotate(rotation)
-            )
+        FloatingActionButton(onClick = onMainFabClick, shape = CircleShape) {
+            Text(text = "+", modifier = Modifier.rotate(rotation), style = MaterialTheme.typography.headlineSmall)
         }
     }
 }
 
 @Composable
-private fun FabActionButton(
-    label: String,
-    onClick: () -> Unit
-) {
+private fun MiniFabAction(label: String, onClick: () -> Unit) {
     ExtendedFloatingActionButton(
         onClick = onClick,
-        text = { Text(text = label) },
-        containerColor = Color.White,
+        text = { Text(label) },
+        containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp)
     )
 }
 
-private fun String?.toEmotionLabel(): String {
-    val value = this?.trim().orEmpty()
-    return when {
-        value.equals("fear", ignoreCase = true) -> "Fear 😬"
-        value.equals("greed", ignoreCase = true) -> "Greed 😈"
-        value.equals("neutral", ignoreCase = true) -> "Neutral 😌"
-        value.isBlank() -> "Neutral 😌"
-        else -> "$value 😌"
-    }
-}
-
 private fun formatCurrency(value: Double): String {
-    return if (value >= 0.0) {
-        "+₹${value.format(2)}"
-    } else {
-        "-₹${abs(value).format(2)}"
-    }
+    val amount = value.format(2)
+    return if (value >= 0) "+₹$amount" else "-₹${kotlin.math.abs(value).format(2)}"
 }
 
 @Composable
-private fun pnlColor(value: Double): Color {
-    return when {
-        value > 0.0 -> ProfitGreen
-        value < 0.0 -> LossRed
-        else -> MaterialTheme.colorScheme.onSurface
-    }
+private fun pnlColor(value: Double): Color = when {
+    value > 0 -> Color(0xFF2E7D32)
+    value < 0 -> Color(0xFFC62828)
+    else -> MaterialTheme.colorScheme.onSurface
 }
 
-private fun Double.format(decimals: Int): String {
-    return ("%." + decimals + "f").format(this)
-}
-
-private val ProfitGreen = Color(0xFF2E7D32)
-private val LossRed = Color(0xFFC62828)
+private fun Double.format(decimals: Int): String = ("%." + decimals + "f").format(this)
