@@ -38,6 +38,8 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
+            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha10")
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
