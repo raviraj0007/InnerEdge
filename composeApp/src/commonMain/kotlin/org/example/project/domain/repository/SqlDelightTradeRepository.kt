@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.LocalDate
 
-// ✅ This import will work now because the Build was Successful!
 import org.example.project.db.TradeDataBase
 import org.example.project.db.TradeEntity
 
@@ -20,8 +19,7 @@ class SqlDelightTradeRepository(
     db: TradeDataBase
 ) : TradeRepository {
 
-    // ✅ Make sure this matches your .sq file name (TradeDataBase.sq -> tradeDataBaseQueries)
-    private val queries = db.tradeDataBaseQueries
+        private val queries = db.tradeDataBaseQueries
 
     override fun getAllTrades(): Flow<List<Trade>> {
         return queries.selectAllTrades()
@@ -33,8 +31,8 @@ class SqlDelightTradeRepository(
                         id = entity.id,
                         date = LocalDate.parse(entity.date),
                         instrument = entity.instrument,
-                        marketType = MarketType.valueOf(entity.marketType),
-                        direction = TradeDirection.valueOf(entity.direction),
+                        marketType = runCatching { MarketType.valueOf(entity.marketType) }.getOrDefault(MarketType.STOCK),
+                        direction = runCatching { TradeDirection.valueOf(entity.direction) }.getOrDefault(TradeDirection.BUY),
                         entryPrice = entity.entryPrice,
                         exitPrice = entity.exitPrice,
                         quantity = entity.quantity.toInt(),
@@ -42,7 +40,10 @@ class SqlDelightTradeRepository(
                         target = entity.target,
                         riskPercent = entity.riskPercent,
                         pnl = entity.pnl,
-                        status = TradeStatus.valueOf(entity.status)
+                        status = runCatching { TradeStatus.valueOf(entity.status) }.getOrDefault(TradeStatus.OPEN),
+                        strategy = null,
+                        mistakes = emptyList(),
+                        emotion = null
                     )
                 }
             }

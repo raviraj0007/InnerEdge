@@ -19,6 +19,7 @@ androidx-activity = "1.9.3"       # Downgraded from 1.12.x
 androidx-lifecycle = "2.8.7"      # Downgraded from 2.9.x
 androidx-core = "1.13.1"          # CRITICAL: Fixes the core-ktx:1.16.0 error
 androidx-transition = "1.5.0"     # CRITICAL: Fixes the transition:1.6.0 error
+androidx-navigation = "2.8.0-alpha10"
 
 [libraries]
 # KotlinX
@@ -32,6 +33,7 @@ androidx-lifecycle-viewmodelCompose = { module = "androidx.lifecycle:lifecycle-v
 # AndroidX (Forced Overrides to prevent API 35 errors)
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-transition = { module = "androidx.transition:transition", version.ref = "androidx-transition" }
+androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 
 # SQLDelight
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
