@@ -42,7 +42,10 @@ class SqlDelightTradeRepository(
                         target = entity.target,
                         riskPercent = entity.riskPercent,
                         pnl = entity.pnl,
-                        status = TradeStatus.valueOf(entity.status)
+                        status = TradeStatus.valueOf(entity.status),
+                        strategy = "",
+                        emotion = "Neutral",
+                        mistakes = emptyList()
                     )
                 }
             }

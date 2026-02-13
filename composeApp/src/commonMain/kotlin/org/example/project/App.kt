@@ -1,31 +1,31 @@
 package org.example.project
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import org.example.project.domain.repository.TradeRepository
 import org.example.project.ui.AddTradeScreen
-import org.example.project.ui.TradeListScreen
+import org.example.project.ui.AppNavigation
 import org.example.project.ui.theme.AppTheme
 
 @Composable
 fun App(tradeRepository: TradeRepository) {
     AppTheme {
-        // Simple Navigation State: "list" or "add"
-        var currentScreen by remember { mutableStateOf("list") }
+        var showAddTrade by remember { mutableStateOf(false) }
 
-        when (currentScreen) {
-            "list" -> {
-                TradeListScreen(
-                    repository = tradeRepository,
-                    onAddClick = { currentScreen = "add" } // Navigate to Add Screen
-                )
-            }
-            "add" -> {
-                AddTradeScreen(
-                    repository = tradeRepository,
-                    onTradeSaved = { currentScreen = "list" }, // Go back on Save
-                    onCancel = { currentScreen = "list" }      // Go back on Cancel
-                )
-            }
+        if (showAddTrade) {
+            AddTradeScreen(
+                repository = tradeRepository,
+                onTradeSaved = { showAddTrade = false },
+                onCancel = { showAddTrade = false }
+            )
+        } else {
+            AppNavigation(
+                repository = tradeRepository,
+                onAddTradeClick = { showAddTrade = true }
+            )
         }
     }
 }
