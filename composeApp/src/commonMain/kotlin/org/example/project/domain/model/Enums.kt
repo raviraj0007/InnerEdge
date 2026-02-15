@@ -5,7 +5,7 @@ enum class TradeDirection {
 }
 
 enum class TradeStatus {
-    OPEN, CLOSED
+    OPEN, WIN, LOSS
 }
 
 enum class MarketType {

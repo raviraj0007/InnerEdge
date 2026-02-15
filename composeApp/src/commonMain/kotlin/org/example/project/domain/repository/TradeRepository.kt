@@ -7,5 +7,11 @@ interface TradeRepository {
 
     fun getAllTrades(): Flow<List<Trade>>
 
+    suspend fun getTradeById(id: String): Trade?
+
     suspend fun insertTrade(trade: Trade)
+
+    suspend fun updateTrade(trade: Trade)
+
+    suspend fun deleteTrade(id: String)
 }

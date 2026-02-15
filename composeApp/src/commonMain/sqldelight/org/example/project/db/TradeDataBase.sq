@@ -11,11 +11,17 @@ CREATE TABLE TradeEntity (
     target REAL,
     riskPercent REAL,
     pnl REAL,
-    status TEXT NOT NULL
+    status TEXT NOT NULL,
+    strategy TEXT,
+    emotion TEXT,
+    notes TEXT
 );
 
 selectAllTrades:
 SELECT * FROM TradeEntity;
+
+selectTradeById:
+SELECT * FROM TradeEntity WHERE id = ?;
 
 insertTrade:
 INSERT OR REPLACE INTO TradeEntity(
@@ -31,9 +37,31 @@ INSERT OR REPLACE INTO TradeEntity(
     target,
     riskPercent,
     pnl,
-    status
+    status,
+    strategy,
+    emotion,
+    notes
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateTrade:
+UPDATE TradeEntity
+SET date = ?,
+    instrument = ?,
+    marketType = ?,
+    direction = ?,
+    entryPrice = ?,
+    exitPrice = ?,
+    quantity = ?,
+    stopLoss = ?,
+    target = ?,
+    riskPercent = ?,
+    pnl = ?,
+    status = ?,
+    strategy = ?,
+    emotion = ?,
+    notes = ?
+WHERE id = ?;
 
 deleteTradeById:
 DELETE FROM TradeEntity WHERE id = ?;

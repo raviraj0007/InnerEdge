@@ -18,5 +18,6 @@ data class Trade(
     val status: TradeStatus,
     val strategy: String? = null,
     val mistakes: List<String> = emptyList(),
-    val emotion: String? = null
+    val emotion: String? = null,
+    val notes: String? = null
 )
