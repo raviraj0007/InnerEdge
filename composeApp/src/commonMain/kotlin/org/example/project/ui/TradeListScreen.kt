@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,7 +72,8 @@ private enum class TradeFilter(val label: String) {
 @Composable
 fun TradeListScreen(
     repository: TradeRepository,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onTradeClick: (String) -> Unit
 ) {
     var trades by remember { mutableStateOf(emptyList<Trade>()) }
     var selectedFilter by remember { mutableStateOf(TradeFilter.ALL) }
@@ -89,7 +91,7 @@ fun TradeListScreen(
             when (selectedFilter) {
                 TradeFilter.ALL -> true
                 TradeFilter.OPEN -> trade.status == TradeStatus.OPEN
-                TradeFilter.CLOSED -> trade.status == TradeStatus.CLOSED
+                TradeFilter.CLOSED -> trade.status != TradeStatus.OPEN
                 TradeFilter.WIN -> (trade.pnl ?: 0.0) > 0.0
                 TradeFilter.LOSS -> (trade.pnl ?: 0.0) < 0.0
             }
@@ -142,7 +144,7 @@ fun TradeListScreen(
                 }
             } else {
                 items(filteredTrades, key = { it.id }) { trade ->
-                    TradeStoryCard(trade = trade)
+                    TradeStoryCard(trade = trade, onClick = { onTradeClick(trade.id) })
                 }
             }
         }
@@ -151,7 +153,7 @@ fun TradeListScreen(
 
 @Composable
 private fun OverviewCard(trades: List<Trade>) {
-    val closedTrades = trades.filter { it.status == TradeStatus.CLOSED && it.pnl != null }
+    val closedTrades = trades.filter { it.status != TradeStatus.OPEN && it.pnl != null }
     val winningTrades = closedTrades.count { (it.pnl ?: 0.0) > 0.0 }
     val winRate = if (closedTrades.isNotEmpty()) {
         (winningTrades.toDouble() / closedTrades.size.toDouble()) * 100
@@ -276,10 +278,11 @@ private fun FilterRow(
 }
 
 @Composable
-private fun TradeStoryCard(trade: Trade) {
+private fun TradeStoryCard(trade: Trade, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
