@@ -2,12 +2,11 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.sqldelight)
     alias(libs.plugins.androidApplication)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
-
     androidTarget {
         compilations.all {
             kotlinOptions {
@@ -16,7 +15,7 @@ kotlin {
         }
     }
 
-    jvm() {  // ✅ Use the default name (maps automatically to jvmMain)
+    jvm("desktop") {
         compilations.all {
             kotlinOptions {
                 jvmTarget = "11"
@@ -24,38 +23,31 @@ kotlin {
         }
     }
 
-    targets.all {
-        compilations.all {
-            kotlinOptions {
-                freeCompilerArgs += "-Xexpect-actual-classes"
-            }
-        }
-    }
-
     sourceSets {
-
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.materialIconsExtended)
-            implementation(libs.androidx.navigation.compose)
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
+
+            implementation(libs.androidx.navigation.compose)
 
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines)
         }
 
         androidMain.dependencies {
+            implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
-            implementation(libs.sqldelight.android)
+            implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.androidx.core.ktx)
-            implementation(libs.androidx.transition)
+            implementation(libs.sqldelight.android.driver)
         }
 
-        jvmMain.dependencies {
+        desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.sqldelight.sqlite.driver)
         }
@@ -76,12 +68,12 @@ sqldelight {
 
 android {
     namespace = "org.example.project"
-    compileSdk = 34
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "org.example.project"
-        minSdk = 24
-        targetSdk = 34
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
     }
@@ -91,7 +83,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
-
 
 compose.desktop {
     application {

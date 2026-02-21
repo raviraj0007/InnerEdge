@@ -1,49 +1,35 @@
 [versions]
-# --- Project Configuration ---
 agp = "8.5.2"
-kotlin = "2.0.21"
-
-# --- Android SDK (Keep at 34) ---
+kotlin = "2.1.0"
+composeMultiplatform = "1.7.3"
+sqldelight = "2.0.2"
+kotlinx-coroutines = "1.9.0"
+kotlinx-datetime = "0.6.1"
 android-compileSdk = "34"
 android-minSdk = "24"
 android-targetSdk = "34"
-
-# --- Libraries (STABLE versions for API 34) ---
-composeMultiplatform = "1.7.0"
-kotlinx-coroutines = "1.9.0"
-kotlinx-datetime = "0.6.1"
-sqldelight = "2.0.2"
-
-# --- AndroidX (Strictly Downgraded for API 34 Compatibility) ---
-androidx-activity = "1.9.3"       # Downgraded from 1.12.x
-androidx-lifecycle = "2.8.7"      # Downgraded from 2.9.x
-androidx-core = "1.13.1"          # CRITICAL: Fixes the core-ktx:1.16.0 error
-androidx-transition = "1.5.0"     # CRITICAL: Fixes the transition:1.6.0 error
+androidx-activity = "1.9.3"
+androidx-lifecycle = "2.8.7"
+androidx-core = "1.13.1"
 androidx-navigation = "2.8.0-alpha10"
 
 [libraries]
-# KotlinX
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
-# AndroidX (Standard)
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
-androidx-lifecycle-viewmodelCompose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
-
-# AndroidX (Forced Overrides to prevent API 35 errors)
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
-androidx-transition = { module = "androidx.transition:transition", version.ref = "androidx-transition" }
 androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
 
-# SQLDelight
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
-sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
-sqldelight-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
+sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
+sqldelight-sqlite-driver = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 
 [plugins]
-androidApplication = { id = "com.android.application", version.ref = "agp" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+androidApplication = { id = "com.android.application", version.ref = "agp" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
