@@ -35,9 +35,6 @@ import com.inneredge.ui.components.pnlColor
 fun DashboardScreen(viewModel: DashboardViewModel, contentPadding: PaddingValues = PaddingValues()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val trades = state.trades
-    val totalPnl = trades.sumOf { it.pnl ?: 0.0 }
-    val closed = trades.filter { it.pnl != null }
-    val winRate = if (closed.isEmpty()) 0.0 else (closed.count { (it.pnl ?: 0.0) > 0.0 }.toDouble() / closed.size) * 100
     val groupedByDate = trades.groupBy { it.date }
 
     LazyColumn(
@@ -48,12 +45,12 @@ fun DashboardScreen(viewModel: DashboardViewModel, contentPadding: PaddingValues
         item { Text("Dashboard", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(UiConstants.SmallSpacing)) {
-                SummaryCard(Modifier.weight(1f), "Total P&L", formatCurrency(totalPnl), pnlColor(totalPnl))
+                SummaryCard(Modifier.weight(1f), "Total P&L", formatCurrency(state.totalPnl), pnlColor(state.totalPnl))
                 SummaryCard(
                     Modifier.weight(1f),
                     "Win Rate",
-                    formatPercent(winRate, 1),
-                    if (winRate >= 50) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface
+                    formatPercent(state.winRate.toDouble(), 1),
+                    if (state.winRate >= 50) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface
                 )
             }
         }
