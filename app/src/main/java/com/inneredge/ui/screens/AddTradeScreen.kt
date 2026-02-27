@@ -4,6 +4,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +21,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -37,43 +40,67 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.inneredge.domain.model.TradeDirection
 import com.inneredge.domain.model.TradeStatus
 import com.inneredge.presentation.viewmodel.AddTradeViewModel
+import java.time.format.DateTimeFormatter
+
+private val mistakeOptions = listOf(
+    "Overtrading",
+    "Revenge Trade",
+    "FOMO Entry",
+    "No Stop Loss",
+    "Moved SL",
+    "Ignored Setup",
+    "Early Exit",
+    "Late Entry"
+)
 
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddEditTradeScreen(viewModel: AddTradeViewModel, onTradeSaved: () -> Unit, onCancel: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     var showCloseDialog by remember { mutableStateOf(false) }
-    var exitPriceInput by remember { mutableStateOf("") }
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a") }
 
     Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text(if (state.isEditing) "Edit Trade" else "New Trade") }) }) { padding ->
         Column(
-            modifier = Modifier.padding(padding).fillMaxSize().verticalScroll(scrollState).padding(16.dp),
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             ElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Trade Details", style = MaterialTheme.typography.titleMedium)
+                    Text("Basic Information", style = MaterialTheme.typography.titleMedium)
+                    OutlinedTextField(
+                        value = state.dateTime.format(dateFormatter),
+                        onValueChange = {},
+                        label = { Text("Date & Time") },
+                        modifier = Modifier.fillMaxWidth(),
+                        readOnly = true
+                    )
                     OutlinedTextField(
                         value = state.instrument,
                         onValueChange = viewModel::onInstrumentChange,
-                        label = { Text("Instrument (e.g., NIFTY 50)") },
-                        modifier = Modifier.fillMaxWidth()
+                        label = { Text("Instrument") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
                     )
                     OutlinedTextField(
-                        value = state.entryPrice,
-                        onValueChange = viewModel::onEntryPriceChange,
-                        label = { Text("Entry Price") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
+                        value = state.strategy,
+                        onValueChange = viewModel::onStrategyChange,
+                        label = { Text("Strategy Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
                     )
                 }
             }
 
             ElevatedCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Direction", style = MaterialTheme.typography.titleMedium)
+                    Text("Execution", style = MaterialTheme.typography.titleMedium)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilledTonalButton(
                             onClick = { viewModel.onDirectionChange(TradeDirection.BUY) },
@@ -91,12 +118,96 @@ fun AddEditTradeScreen(viewModel: AddTradeViewModel, onTradeSaved: () -> Unit, o
                             )
                         ) { Text("SELL") }
                     }
+                    OutlinedTextField(
+                        value = state.entryPrice,
+                        onValueChange = viewModel::onEntryPriceChange,
+                        label = { Text("Entry Price") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = state.stopLoss,
+                        onValueChange = viewModel::onStopLossChange,
+                        label = { Text("Stop Loss") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = state.takeProfit,
+                        onValueChange = viewModel::onTakeProfitChange,
+                        label = { Text("Take Profit") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = state.quantity,
+                        onValueChange = viewModel::onQuantityChange,
+                        label = { Text("Lot Size") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
-            if (state.isEditing && state.status == TradeStatus.OPEN) {
-                Button(onClick = { showCloseDialog = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Close Position")
+            ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Risk & Result", style = MaterialTheme.typography.titleMedium)
+                    OutlinedTextField(
+                        value = state.riskPercent,
+                        onValueChange = viewModel::onRiskPercentChange,
+                        label = { Text("Risk %") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    if (state.status == TradeStatus.CLOSED) {
+                        OutlinedTextField(
+                            value = state.exitPrice,
+                            onValueChange = {},
+                            label = { Text("Exit Price") },
+                            modifier = Modifier.fillMaxWidth(),
+                            readOnly = true
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = state.pnlFormatted,
+                        onValueChange = {},
+                        label = { Text("P&L ₹") },
+                        modifier = Modifier.fillMaxWidth(),
+                        readOnly = true
+                    )
+
+                    if (state.isEditing && state.status == TradeStatus.OPEN) {
+                        Button(onClick = { showCloseDialog = true }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Close Position")
+                        }
+                    }
+                }
+            }
+
+            ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Psychology", style = MaterialTheme.typography.titleMedium)
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        mistakeOptions.forEach { mistake ->
+                            FilterChip(
+                                selected = state.mistakes.contains(mistake),
+                                onClick = { viewModel.toggleMistake(mistake) },
+                                label = { Text(mistake) }
+                            )
+                        }
+                    }
+                    OutlinedTextField(
+                        value = state.notes,
+                        onValueChange = viewModel::onNotesChange,
+                        label = { Text("Notes") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 4
+                    )
                 }
             }
 
@@ -116,21 +227,20 @@ fun AddEditTradeScreen(viewModel: AddTradeViewModel, onTradeSaved: () -> Unit, o
             title = { Text("Close Position") },
             text = {
                 OutlinedTextField(
-                    value = exitPriceInput,
-                    onValueChange = { exitPriceInput = it },
+                    value = state.exitPrice,
+                    onValueChange = viewModel::onExitPriceChange,
                     label = { Text("Exit Price") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val exitPrice = exitPriceInput.toDoubleOrNull()
+                        val exitPrice = state.exitPrice.toDoubleOrNull()
                         if (exitPrice != null) {
                             viewModel.closeTrade(exitPrice, onTradeSaved)
                             showCloseDialog = false
-                            exitPriceInput = ""
                         }
                     }
                 ) { Text("Close") }
