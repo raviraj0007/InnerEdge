@@ -1,5 +1,7 @@
 package com.inneredge.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,6 +38,7 @@ import com.inneredge.domain.model.TradeDirection
 import com.inneredge.domain.model.TradeStatus
 import com.inneredge.presentation.viewmodel.AddTradeViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditTradeScreen(viewModel: AddTradeViewModel, onTradeSaved: () -> Unit, onCancel: () -> Unit) {
