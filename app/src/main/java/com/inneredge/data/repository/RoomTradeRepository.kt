@@ -19,4 +19,12 @@ class RoomTradeRepository @Inject constructor(
     override suspend fun insertTrade(trade: Trade) {
         tradeDao.insertTrade(trade.toEntity())
     }
+
+    override suspend fun getTradeById(id: String): Trade? {
+        return tradeDao.getTradeById(id)?.toDomain()
+    }
+
+    override suspend fun updateTrade(trade: Trade) {
+        tradeDao.updateTrade(trade.toEntity())
+    }
 }
