@@ -29,5 +29,9 @@ class RoomTradeRepositoryTest {
         private val state = MutableStateFlow(initial)
         override fun getAllTrades(): Flow<List<TradeEntity>> = state
         override suspend fun insertTrade(trade: TradeEntity) { state.value = state.value + trade }
+        override suspend fun getTradeById(id: String): TradeEntity? = state.value.firstOrNull { it.id == id }
+        override suspend fun updateTrade(trade: TradeEntity) {
+            state.value = state.value.map { current -> if (current.id == trade.id) trade else current }
+        }
     }
 }

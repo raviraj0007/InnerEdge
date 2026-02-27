@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -13,4 +14,10 @@ interface TradeDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTrade(trade: TradeEntity)
+
+    @Query("SELECT * FROM trades WHERE id = :id LIMIT 1")
+    suspend fun getTradeById(id: String): TradeEntity?
+
+    @Update
+    suspend fun updateTrade(trade: TradeEntity)
 }

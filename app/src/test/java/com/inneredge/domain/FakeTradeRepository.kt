@@ -11,4 +11,10 @@ class FakeTradeRepository(initialTrades: List<Trade> = emptyList()) : TradeRepos
     override suspend fun insertTrade(trade: Trade) {
         flow.value = flow.value + trade
     }
+
+    override suspend fun getTradeById(id: String): Trade? = flow.value.firstOrNull { it.id == id }
+
+    override suspend fun updateTrade(trade: Trade) {
+        flow.value = flow.value.map { existing -> if (existing.id == trade.id) trade else existing }
+    }
 }

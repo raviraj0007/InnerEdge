@@ -1,5 +1,7 @@
 package com.inneredge.data.repository
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.inneredge.data.local.TradeDao
 import com.inneredge.data.mapper.toDomain
 import com.inneredge.data.mapper.toEntity
@@ -12,11 +14,20 @@ import javax.inject.Inject
 class RoomTradeRepository @Inject constructor(
     private val tradeDao: TradeDao
 ) : TradeRepository {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun getAllTrades(): Flow<List<Trade>> = tradeDao.getAllTrades().map { entities ->
         entities.map { it.toDomain() }
     }
 
     override suspend fun insertTrade(trade: Trade) {
         tradeDao.insertTrade(trade.toEntity())
+    }
+
+    override suspend fun getTradeById(id: String): Trade? {
+        return tradeDao.getTradeById(id)?.toDomain()
+    }
+
+    override suspend fun updateTrade(trade: Trade) {
+        tradeDao.updateTrade(trade.toEntity())
     }
 }

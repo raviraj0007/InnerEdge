@@ -62,7 +62,7 @@ import java.time.LocalDate
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TradeListScreen(viewModel: TradeListViewModel, onAddClick: () -> Unit) {
+fun TradeListScreen(viewModel: TradeListViewModel, onAddClick: () -> Unit, onTradeClick: (String) -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -89,7 +89,7 @@ fun TradeListScreen(viewModel: TradeListViewModel, onAddClick: () -> Unit) {
             item { OverviewCard(trades = state.trades) }
             item { FilterRow(selectedFilter = state.selectedFilter, onFilterSelected = viewModel::setFilter) }
             if (state.filteredTrades.isEmpty()) item { EmptyStateCard(onAddClick = onAddClick) }
-            else items(state.filteredTrades, key = { it.id }) { trade -> TradeStoryCard(trade = trade) }
+            else items(state.filteredTrades, key = { it.id }) { trade -> TradeStoryCard(trade = trade, onClick = { onTradeClick(trade.id) }) }
         }
     }
 }
@@ -157,8 +157,9 @@ private fun FilterRow(selectedFilter: TradeFilter, onFilterSelected: (TradeFilte
 }
 
 @Composable
-private fun TradeStoryCard(trade: Trade) {
+private fun TradeStoryCard(trade: Trade, onClick: () -> Unit) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
