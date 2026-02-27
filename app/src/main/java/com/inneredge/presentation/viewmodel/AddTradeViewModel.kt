@@ -102,19 +102,28 @@ class AddTradeViewModel @Inject constructor(
 
         viewModelScope.launch {
             val existing = originalTrade
+            val entryPrice = current.entryPrice.toDoubleOrNull() ?: 0.0
+            val exitPrice = current.exitPrice.toDoubleOrNull() ?: existing?.exitPrice
+            val quantity = current.quantity.toIntOrNull() ?: 0
+            val calculatedPnl = calculatePnl(
+                entryPrice = entryPrice,
+                quantity = quantity.toDouble(),
+                direction = current.direction,
+                exitPrice = exitPrice
+            )
             val trade = Trade(
                 id = existing?.id ?: UUID.randomUUID().toString(),
                 date = existing?.date ?: current.dateTime.toLocalDate(),
                 instrument = current.instrument,
                 marketType = existing?.marketType ?: MarketType.FNO,
                 direction = current.direction,
-                entryPrice = current.entryPrice.toDoubleOrNull() ?: 0.0,
-                exitPrice = current.exitPrice.toDoubleOrNull() ?: existing?.exitPrice,
-                quantity = current.quantity.toIntOrNull() ?: 0,
+                entryPrice = entryPrice,
+                exitPrice = exitPrice,
+                quantity = quantity,
                 stopLoss = current.stopLoss.toDoubleOrNull(),
                 target = current.takeProfit.toDoubleOrNull(),
                 riskPercent = current.riskPercent.toDoubleOrNull(),
-                pnl = current.pnlFormatted.removePrefix("₹ ").replace(",", "").toDoubleOrNull() ?: existing?.pnl,
+                pnl = calculatedPnl ?: existing?.pnl,
                 status = if ((current.exitPrice.toDoubleOrNull() != null) && current.status == TradeStatus.OPEN) TradeStatus.CLOSED else current.status,
                 strategy = current.strategy.ifBlank { null },
                 mistakes = current.mistakes,
@@ -178,11 +187,20 @@ class AddTradeViewModel @Inject constructor(
         direction: TradeDirection,
         exitPrice: Double?
     ): String {
-        if (entryPrice == null || quantity == null || exitPrice == null) return ""
-        val pnl = when (direction) {
+        val pnl = calculatePnl(entryPrice, quantity, direction, exitPrice) ?: return ""
+        return "₹ %.2f".format(pnl)
+    }
+
+    private fun calculatePnl(
+        entryPrice: Double?,
+        quantity: Double?,
+        direction: TradeDirection,
+        exitPrice: Double?
+    ): Double? {
+        if (entryPrice == null || quantity == null || exitPrice == null) return null
+        return when (direction) {
             TradeDirection.BUY -> (exitPrice - entryPrice) * quantity
             TradeDirection.SELL -> (entryPrice - exitPrice) * quantity
         }
-        return "₹ %.2f".format(pnl)
     }
 }
